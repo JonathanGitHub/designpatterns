@@ -1,10 +1,10 @@
-
+//四种不同的singleton pattern implmentation http://blog.csdn.net/lmj623565791/article/details/24468641
 public class LazyLoadingSingleObject {
 	
 	private static LazyLoadingSingleObject instance; // no final modifier 
 
-   //make the constructor private so that this class cannot be
-   //instantiated
+   	//make the constructor private so that this class cannot be
+   	//instantiated
 	private LazyLoadingSingleObject(){
 
 	}

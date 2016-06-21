@@ -6,8 +6,10 @@ public class SingletonPatternDemo {
 
       //Get the only object available
 		SingleObject object = SingleObject.getInstance();
+		LazyLoadingSingleObject lazyLoadingSingleObject = LazyLoadingSingleObject.getInstance();
 
 		//show the msg
 		object.showMessage();
+		lazyLoadingSingleObject.showMessage();
 	}
 }

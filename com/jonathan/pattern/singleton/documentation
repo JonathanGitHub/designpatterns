@@ -1,0 +1,169 @@
+
+http://stackoverflow.com/questions/7790185/singleton-lazy-vs-eager-instantiation
+http://blog.csdn.net/guolin_blog/article/details/8860649#reply
+
+饿汉式:
+        public class Singleton{
+            private static Singleton singleton = new Singleton ();
+            private Singleton (){}
+            public Singleton getInstance(){return singletion;}
+       } 
+
+     懒汉式:
+       public class Singleton{
+            private static Singleton singleton = null;
+            public static synchronized synchronized getInstance(){
+                 if(singleton==null){
+                     singleton = new Singleton();
+                 }
+                return singleton;
+            }
+       } 
+
+     比较:
+         饿汉式是线程安全的,在类创建的同时就已经创建好一个静态的对象供系统使用,以后不在改变
+          懒汉式如果在创建实例对象时不加上synchronized则会导致对对象的访问不是线程安全的
+          推荐使用第一种 
+          
+          
+          
+转载请注明出处：http://blog.csdn.net/guolin_blog/article/details/8860649
+写软件的时候经常需要用到打印日志功能，可以帮助你调试和定位问题，项目上线后还可以帮助你分析数据。但是Java原生带有的System.out.println()方法却很少在真正的项目开发中使用，甚至像findbugs等代码检查工具还会认为使用System.out.println()是一个bug。
+为什么作为Java新手神器的System.out.println()，到了真正项目开发当中会被唾弃呢？其实只要细细分析，你就会发现它的很多弊端。比如不可控制，所有的日志都会在项目上线后照常打印，从而降低运行效率；又或者不能将日志记录到本地文件，一旦打印被清除，日志将再也找不回来；再或者打印的内容没有Tag区分，你将很难辨别这一行日志是在哪个类里打印的。
+你的leader也不是傻瓜，用System.out.println()的各项弊端他也清清楚楚，因此他今天给你的任务就是制作一个日志工具类，来提供更好的日志功能。不过你的leader人还不错，并没让你一开始就实现一个具备各项功能的牛逼日志工具类，只需要一个能够控制打印级别的日志工具就好。
+这个需求对你来说并不难，你立刻就开始动手编写了，并很快完成了第一个版本：
+[java] view plain copy
+public class LogUtil {  
+  
+    public final int DEGUB = 0;  
+  
+    public final int INFO = 1;  
+  
+    public final int ERROR = 2;  
+  
+    public final int NOTHING = 3;  
+  
+    public int level = DEGUB;  
+  
+    public void debug(String msg) {  
+        if (DEGUB >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+    public void info(String msg) {  
+        if (INFO >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+    public void error(String msg) {  
+        if (ERROR >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+}  
+通过这个类来打印日志，只需要控制level的级别，就可以自由地控制打印的内容。比如现在项目处于开发阶段，就将level设置为DEBUG，这样所有的日志信息都会被打印。而项目如果上线了，可以把level设置为INFO，这样就只能看到INFO及以上级别的日志打印。如果你只想看到错误日志，就可以把level设置为ERROR。而如果你开发的项目是客户端版本，不想让任何日志打印出来，可以将level设置为NOTHING。打印的时候只需要调用：
+[java] view plain copy
+new LogUtil().debug("Hello World");  
+你迫不及待地将这个工具介绍给你的leader，你的leader听完你的介绍后说：“好样的，今后大伙都用你写的这个工具来打印日志了！”
+可是没过多久，你的leader找到你来反馈问题了。他说虽然这个工具好用，可是打印这种事情是不区分对象的，这里每次需要打印日志的时候都需要new出一个新的LogUtil，太占用内存了，希望你可以将这个工具改成用单例模式实现。
+你认为你的leader说的很有道理，而且你也正想趁这个机会练习使用一下设计模式，于是你写出了如下的代码：
+[java] view plain copy
+public class LogUtil {  
+  
+    private static LogUtil sLogUtil;  
+  
+    public final int DEGUB = 0;  
+  
+    public final int INFO = 1;  
+  
+    public final int ERROR = 2;  
+  
+    public final int NOTHING = 3;  
+  
+    public int level = DEGUB;  
+  
+    private LogUtil() {  
+    }  
+  
+    public static LogUtil getInstance() {  
+        if (sLogUtil == null) {  
+            sLogUtil = new LogUtil();  
+        }  
+        return sLogUtil;  
+    }  
+  
+    public void debug(String msg) {  
+        if (DEGUB >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+    public void info(String msg) {  
+        if (INFO >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+    public void error(String msg) {  
+        if (ERROR >= level) {  
+            System.out.println(msg);  
+        }  
+    }  
+  
+}  
+首先将LogUtil的构造函数私有化，这样就无法使用new关键字来创建LogUtil的实例了。然后使用一个sLogUtil私有静态变量来保存实例，并提供一个公有的getInstance方法用于获取LogUtil的实例，在这个方法里面判断如果sLogUtil为空，就new出一个新的LogUtil实例，否则就直接返回sLogUtil。这样就可以保证内存当中只会存在一个LogUtil的实例了。单例模式完工！这时打印日志的代码需要改成如下方式：
+[java] view plain copy
+LogUtil.getInstance().debug("Hello World");  
+你将这个版本展示给你的leader瞧，他看后笑了笑，说：“虽然这看似是实现了单例模式，可是还存在着bug的哦。
+你满腹狐疑，单例模式不都是这样实现的吗？还会有什么bug呢？ 
+你的leader提示你，使用单例模式就是为了让这个类在内存中只能有一个实例的，可是你有考虑到在多线程中打印日志的情况吗？如下面代码所示：
+[java] view plain copy
+public static LogUtil getInstance() {  
+    if (sLogUtil == null) {  
+        sLogUtil = new LogUtil();  
+    }  
+    return sLogUtil;  
+}  
+如果现在有两个线程同时在执行getInstance方法，第一个线程刚执行完第2行，还没执行第3行，这个时候第二个线程执行到了第2行，它会发现sLogUtil还是null，于是进入到了if判断里面。这样你的单例模式就失败了，因为创建了两个不同的实例。
+你恍然大悟，不过你的思维非常快，立刻就想到了解决办法，只需要给方法加上同步锁就可以了，代码如下：
+[java] view plain copy
+public synchronized static LogUtil getInstance() {  
+    if (sLogUtil == null) {  
+        sLogUtil = new LogUtil();  
+    }  
+    return sLogUtil;  
+}  
+这样，同一时刻只允许有一个线程在执行getInstance里面的代码，这样就有效地解决了上面会创建两个实例的情况。
+你的leader看了你的新代码后说：“恩，不错。这确实解决了有可能创建两个实例的情况，但是这段代码还是有问题的。”
+你紧张了起来，怎么还会有问题啊？
+你的leader笑笑：“不用紧张，这次不是bug，只是性能上可以优化一些。你看一下，如果是在getInstance方法上加了一个synchronized，那么我每次去执行getInstace方法的时候都会受到同步锁的影响，这样运行的效率会降低，其实只需要在第一次创建LogUtil实例的时候加上同步锁就好了。我来教你一下怎么把它优化的更好。”
+首先将synchronized关键字从方法声明中去除，把它加入到方法体当中：
+[java] view plain copy
+public static LogUtil getInstance() {  
+    synchronized (LogUtil.class) {  
+        if (sLogUtil == null) {  
+            sLogUtil = new LogUtil();  
+        }  
+        return sLogUtil;  
+    }  
+}  
+这样效果是和直接在方法上加synchronized完全一致的。然后在synchronized的外面再加一层判断，如下所示：
+[java] view plain copy
+public static LogUtil getInstance() {  
+    if (sLogUtil == null) {  
+        synchronized (LogUtil.class) {  
+            if (sLogUtil == null) {  
+                sLogUtil = new LogUtil();  
+            }  
+        }  
+    }  
+    return sLogUtil;  
+}  
+代码改成这样之后，只有在sLogUtil还没被初始化的时候才会进入到第3行，然后加上同步锁。等sLogUtil一但初始化完成了，就再也走不到第3行了，这样执行getInstance方法也不会再受到同步锁的影响，效率上会有一定的提升。
+你情不自禁赞叹到，这方法真巧妙啊，能想得出来实在是太聪明了。
+你的leader马上谦虚起来：“这种方法叫做双重锁定(Double-Check Locking)，可不是我想出来的，更多的资料你可以在网上查一查。”
+单例：保证一个类仅有一个实例，并提供一个访问它的全局访问点。 
+第一时间获得博客更新提醒，以及更多技术信息分享，欢迎关注我的微信公众号，扫一扫下方二维码或搜索微信号guolin_blog，即可关注。

@@ -167,3 +167,11 @@ public static LogUtil getInstance() {
 你的leader马上谦虚起来：“这种方法叫做双重锁定(Double-Check Locking)，可不是我想出来的，更多的资料你可以在网上查一查。”
 单例：保证一个类仅有一个实例，并提供一个访问它的全局访问点。 
 第一时间获得博客更新提醒，以及更多技术信息分享，欢迎关注我的微信公众号，扫一扫下方二维码或搜索微信号guolin_blog，即可关注。
+
+
+Summary from http://www.ibm.com/developerworks/java/library/j-dcl/index.html
+"In an effort to avoid costly synchronization in singletons, programmers, quite ingeniously, invented the double-checked locking idiom. 
+Unfortunately, it was not until this idiom was in fairly wide use that it became apparent that it is not a safe programming construct 
+due to the current memory model. Work is underway to redefine areas of the memory model that are weak. However, even under the 
+newly proposed memory model, double-checked locking will not work. The best solution to this problem is to accept synchronization 
+or use a static field"
